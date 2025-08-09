@@ -13,6 +13,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "fs": "^0.0.1-security",
     "mongoose": "^8.17.1",
     "path-to-regexp": "^6.2.1"
   }
