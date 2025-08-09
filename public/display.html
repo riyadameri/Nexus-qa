@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الأسئلة التفاعلي - نوكسوس</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --accent: #ff4d4d;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #38ef7d;
+            --warning: #fbb040;
+            --info: #17a2b8;
+            --neon: #0ff0fc;
+            --tv-bezel: #1a1a1a;
+        }
+        
+        @font-face {
+            font-family: 'Digital';
+            src: url('https://fonts.cdnfonts.com/css/digital-7-mono');
+        }
+        
+        body {
+            font-family: 'Tajawal', 'Digital', sans-serif;
+            background: linear-gradient(135deg, #000428, #004e92);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .tv-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 25px solid var(--tv-bezel);
+            border-radius: 30px;
+            box-shadow: 
+                0 0 50px rgba(0, 0, 0, 0.8),
+                inset 0 0 30px rgba(0, 0, 0, 0.7);
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .tv-screen {
+            position: relative;
+            width: 95%;
+            max-width: 1400px;
+            margin: 30px auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            box-shadow: 
+                0 0 80px rgba(106, 17, 203, 0.6),
+                inset 0 0 50px rgba(37, 117, 252, 0.4);
+            border: 3px solid var(--neon);
+            overflow: hidden;
+            animation: flicker 8s infinite;
+        }
+        
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(255, 255, 255, 0.05) 0.5%,
+                transparent 1%
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid var(--neon);
+        }
+        
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 400px;
+            height: 100%;
+            background-image: url('https://cdn-icons-png.flaticon.com/512/3344/3344376.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: right center;
+            opacity: 0.3;
+            filter: drop-shadow(0 0 15px var(--neon));
+        }
+        
+        .header-content {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 3rem;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.7));
+        }
+        
+        .logo {
+            height: 100px;
+            transition: all 0.4s;
+        }
+        
+        .logo:hover {
+            transform: scale(1.15) rotate(5deg);
+            filter: drop-shadow(0 0 20px var(--neon));
+        }
+        
+        .club-name {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 1rem 0;
+            background: linear-gradient(to right, #fff, #c9d6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(201, 214, 255, 0.7);
+            letter-spacing: 3px;
+            animation: neonPulse 2s infinite alternate;
+        }
+        
+        .event-title {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            color: var(--neon);
+            text-shadow: 0 0 10px var(--neon);
+            font-family: 'Digital', sans-serif;
+        }
+        
+        .main-container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            color: white;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+            text-align: center;
+            position: relative;
+            padding-bottom: 1.5rem;
+            text-shadow: 0 0 15px var(--secondary);
+        }
+        
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            right: 50%;
+            transform: translateX(50%);
+            width: 200px;
+            height: 5px;
+            background: linear-gradient(to right, var(--accent), var(--neon));
+            border-radius: 3px;
+            box-shadow: 0 0 15px var(--accent);
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+        
+        .option-card {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(37, 117, 252, 0.4);
+            padding: 3rem 2.5rem;
+            transition: all 0.4s ease;
+            text-decoration: none;
+            color: white;
+            border: 2px solid var(--secondary);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+        
+        .option-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 0 40px var(--secondary);
+            border-color: var(--neon);
+        }
+        
+        .option-card::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(106, 17, 203, 0.2),
+                rgba(37, 117, 252, 0.4),
+                rgba(106, 17, 203, 0.2)
+            );
+            transform: rotate(45deg);
+            z-index: -1;
+            animation: shine 3s infinite;
+        }
+        
+        .option-card h2 {
+            color: white;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .option-card h2 i {
+            color: var(--neon);
+            font-size: 2.2rem;
+            text-shadow: 0 0 15px var(--neon);
+        }
+        
+        .option-card p {
+            color: #c9d6ff;
+            line-height: 1.8;
+            font-size: 1.2rem;
+        }
+        
+        .featured-questions {
+            margin-top: 5rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 3rem;
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 30px rgba(106, 17, 203, 0.4);
+            backdrop-filter: blur(5px);
+        }
+        
+        .featured-questions h2 {
+            color: white;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 2rem;
+            text-shadow: 0 0 15px var(--info);
+        }
+        
+        .featured-questions h2 i {
+            color: var(--warning);
+            text-shadow: 0 0 15px var(--warning);
+            font-size: 2rem;
+        }
+        
+        .question-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .question-item {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.4s;
+            border-left: 5px solid var(--secondary);
+            border-right: 5px solid transparent;
+            backdrop-filter: blur(4px);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .question-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 0 25px var(--primary);
+            border-right-color: var(--accent);
+        }
+        
+        .question-item::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary), var(--secondary), var(--primary));
+        }
+        
+        .question-item.featured {
+            grid-column: 1 / -1;
+            background: rgba(0, 0, 0, 0.8);
+            border-left: 5px solid var(--accent);
+            border-right: 5px solid var(--neon);
+            animation: pulseBorder 2s infinite;
+        }
+        
+        .question-item.answered {
+            border-left: 5px solid var(--success);
+        }
+        
+        .question-text {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: white;
+            font-size: 1.3rem;
+            position: relative;
+            padding-right: 2rem;
+        }
+        
+        .question-text::before {
+            content: "Q:";
+            position: absolute;
+            right: -1.5rem;
+            color: var(--neon);
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .answer-text {
+            color: var(--success);
+            font-style: italic;
+            padding-right: 2rem;
+            border-right: 3px solid var(--success);
+            margin-right: 1.5rem;
+            position: relative;
+            text-shadow: 0 0 8px rgba(56, 239, 125, 0.7);
+            font-size: 1.2rem;
+        }
+        
+        .answer-text::before {
+            content: "A:";
+            position: absolute;
+            right: -1.5rem;
+            color: var(--success);
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .question-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            color: #c9d6ff;
+            font-size: 0.9rem;
+        }
+        
+        .question-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        .feature-btn {
+            background: rgba(251, 176, 64, 0.2);
+            color: var(--warning);
+        }
+        
+        .answer-btn {
+            background: rgba(56, 239, 125, 0.2);
+            color: var(--success);
+        }
+        
+        .delete-btn {
+            background: rgba(255, 77, 77, 0.2);
+            color: var(--accent);
+        }
+        
+        .footer {
+            background: linear-gradient(to right, var(--primary), var(--dark));
+            color: white;
+            padding: 3rem 0;
+            margin-top: 5rem;
+            text-align: center;
+            border-top: 3px solid var(--neon);
+            position: relative;
+        }
+        
+        .footer::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, 
+                transparent, 
+                var(--neon), 
+                var(--accent), 
+                var(--neon), 
+                transparent);
+            animation: slide 5s infinite linear;
+        }
+        
+        .footer-content {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .social-links a {
+            color: white;
+            font-size: 2rem;
+            transition: all 0.4s;
+            text-shadow: 0 0 8px currentColor;
+        }
+        
+        .social-links a:hover {
+            color: var(--neon);
+            transform: translateY(-5px) scale(1.3);
+            text-shadow: 0 0 20px var(--neon);
+        }
+        
+        .copyright {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            opacity: 0.9;
+            color: #c9d6ff;
+            font-family: 'Digital', sans-serif;
+        }
+        
+        .sponsor {
+            margin-top: 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .sponsor a {
+            color: var(--neon);
+            text-decoration: none;
+            font-weight: 700;
+            text-shadow: 0 0 10px var(--neon);
+            transition: all 0.4s;
+        }
+        
+        .sponsor a:hover {
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent);
+        }
+        
+        /* Animations */
+        @keyframes flicker {
+            0%, 100% { opacity: 1; box-shadow: 0 0 80px rgba(106, 17, 203, 0.6); }
+            50% { opacity: 0.98; box-shadow: 0 0 60px rgba(106, 17, 203, 0.4); }
+        }
+        
+        @keyframes neonPulse {
+            0%, 100% { 
+                text-shadow: 0 0 15px #fff, 0 0 30px #fff, 0 0 45px var(--neon), 0 0 60px var(--neon); 
+            }
+            50% { 
+                text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--neon), 0 0 40px var(--neon); 
+            }
+        }
+        
+        @keyframes digitalGlow {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; text-shadow: 0 0 10px var(--neon); }
+            100% { opacity: 0.8; }
+        }
+        
+        @keyframes shine {
+            0% { transform: rotate(45deg) translate(-30%, -30%); }
+            100% { transform: rotate(45deg) translate(30%, 30%); }
+        }
+        
+        @keyframes slide {
+            0% { background-position: -100% 0; }
+            100% { background-position: 100% 0; }
+        }
+        
+        @keyframes pulseBorder {
+            0%, 100% { box-shadow: 0 0 20px rgba(251, 176, 64, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(251, 176, 64, 0.8); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Admin Panel */
+        .admin-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .admin-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--accent);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .admin-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px var(--accent);
+        }
+        
+        .admin-controls {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 30px rgba(255, 77, 77, 0.5);
+            display: none;
+            width: 300px;
+        }
+        
+        .admin-controls.show {
+            display: block;
+            animation: fadeInUp 0.5s;
+        }
+        
+        .admin-controls h3 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .admin-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .admin-form textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 5px;
+            border: 1px solid var(--secondary);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .admin-form button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .admin-form button:hover {
+            background: var(--primary);
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .question-list {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .tv-frame {
+                border-width: 15px;
+            }
+            
+            .logo {
+                height: 80px;
+            }
+            
+            .club-name {
+                font-size: 2.2rem;
+            }
+            
+            .event-title {
+                font-size: 1.2rem;
+            }
+            
+            .main-container {
+                padding: 2rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .options {
+                grid-template-columns: 1fr;
+            }
+            
+            .featured-questions {
+                padding: 2rem;
+            }
+            
+            .question-item {
+                padding: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .tv-frame {
+                border-width: 10px;
+                border-radius: 15px;
+            }
+            
+            .logo {
+                height: 60px;
+            }
+            
+            .club-name {
+                font-size: 1.8rem;
+            }
+            
+            .main-container {
+                padding: 1.5rem;
+            }
+            
+            .option-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .question-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-controls {
+                width: 280px;
+                right: -50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tv-frame"></div>
+    <div class="tv-screen">
+        <div class="scanlines"></div>
+        
+        <div class="header">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img src="https://via.placeholder.com/100x100/6a11cb/ffffff?text=NEXUS" alt="Nexus Club Logo" class="logo">
+                    <img src="https://via.placeholder.com/100x100/2575fc/ffffff?text=REDOX" alt="Redox Logo" class="logo">
+                </div>
+                <h1 class="club-name">نادي نوكسوس</h1>
+                <p class="event-title digital-text">تظاهرة الحياة الجامعية 2025-2026</p>
+            </div>
+        </div>
+        
+        <div class="main-container">
+            <h1 class="neon-text">نظام الأسئلة والأجوبة التفاعلي</h1>
+            
+            <div class="options">
+                <a href="/ask" class="option-card">
+                    <h2><i class="fas fa-question-circle"></i> طرح سؤال جديد</h2>
+                    <p>شارك استفساراتك مع خبرائنا في مختلف المجالات واحصل على إجابات فورية ومفصلة</p>
+                    <div class="digital-text" style="margin-top: 1.5rem; color: var(--neon); font-size: 1rem;">
+                        <i class="fas fa-arrow-left"></i> انقر هنا للبدء
+                    </div>
+                </a>
+                
+                <a href="/display" class="option-card">
+                    <h2><i class="fas fa-desktop"></i> عرض الأسئلة</h2>
+                    <p>تصفح أحدث الأسئلة والأجوبة المطروحة من قبل الزوار والخبراء المشاركين</p>
+                    <div class="digital-text" style="margin-top: 1.5rem; color: var(--neon); font-size: 1rem;">
+                        <i class="fas fa-arrow-left"></i> انقر هنا للمشاهدة
+                    </div>
+                </a>
+                
+                <a href="/about" class="option-card">
+                    <h2><i class="fas fa-robot"></i> عن النادي</h2>
+                    <p>تعرف على نادي نوكسوس وأنشطته وبرامجه المتميزة في الجامعة</p>
+                    <div class="digital-text" style="margin-top: 1.5rem; color: var(--neon); font-size: 1rem;">
+                        <i class="fas fa-arrow-left"></i> انقر هنا للمزيد
+                    </div>
+                </a>
+            </div>
+            
+            <div class="featured-questions">
+                <h2><i class="fas fa-star"></i> أسئلة مميزة</h2>
+                <div class="question-list" id="featuredQuestions">
+                    <!-- Questions will be loaded here by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-content">
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+                <p class="copyright digital-text">© 2025 جميع الحقوق محفوظة لنادي نوكسوس</p>
+                <p class="sponsor">برعاية <a href="#">ريدوكس</a> | الشريك التقني الرسمي</p>
+            </div>
+        </div>
+        
+        <!-- Admin Panel -->
+        <div class="admin-panel">
+            <button class="admin-btn" id="adminToggle">
+                <i class="fas fa-cog"></i>
+            </button>
+            <div class="admin-controls" id="adminControls">
+                <h3>لوحة التحكم</h3>
+                <div class="admin-form">
+                    <textarea id="answerInput" placeholder="اكتب الإجابة هنا..."></textarea>
+                    <button id="submitAnswer">إرسال الإجابة</button>
+                    <button id="featureQuestion">تمييز السؤال</button>
+                    <button id="deleteQuestion">حذف السؤال</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // TV noise effect
+        document.addEventListener('DOMContentLoaded', () => {
+    const displayQuestions = document.getElementById('displayQuestions');
+    let selectedQuestionId = null;
+    
+    // Fetch and display questions
+    async function fetchAndDisplayQuestions() {
+        try {
+            const response = await fetch('/api/questions');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const questions = await response.json();
+            
+            displayQuestions.innerHTML = '';
+            
+            if (questions.length === 0) {
+                displayQuestions.innerHTML = `
+                    <div class="display-question empty-state">
+                        <i class="fas fa-question-circle"></i>
+                        <h3>لا توجد أسئلة بعد</h3>
+                    </div>
+                `;
+                return;
+            }
+            
+            questions.forEach(question => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = `display-question ${question.featured ? 'featured' : ''} ${question.answered ? 'answered' : ''}`;
+                questionDiv.dataset.id = question._id;
+                
+                if (question._id === selectedQuestionId) {
+                    questionDiv.classList.add('selected');
+                }
+                
+                const questionHeader = document.createElement('div');
+                questionHeader.className = 'question-header';
+                
+                const questionTitle = document.createElement('h3');
+                questionTitle.textContent = question.text;
+                
+                const questionMeta = document.createElement('div');
+                questionMeta.className = 'question-meta';
+                questionMeta.innerHTML = `
+                    <span class="question-date">${new Date(question.createdAt).toLocaleString('ar-EG')}</span>
+                    <span class="question-status ${question.answered ? 'answered' : 'pending'}">
+                        ${question.answered ? 'تم الإجابة' : 'بانتظار الإجابة'}
+                    </span>
+                `;
+                
+                questionHeader.appendChild(questionTitle);
+                questionHeader.appendChild(questionMeta);
+                questionDiv.appendChild(questionHeader);
+                
+                if (question.answered && question.answer) {
+                    const answerDiv = document.createElement('div');
+                    answerDiv.className = 'answer';
+                    
+                    const answerTitle = document.createElement('h4');
+                    answerTitle.textContent = 'الجواب:';
+                    
+                    const answerText = document.createElement('p');
+                    answerText.textContent = question.answer;
+                    
+                    answerDiv.appendChild(answerTitle);
+                    answerDiv.appendChild(answerText);
+                    questionDiv.appendChild(answerDiv);
+                }
+                
+                // Add click event to select question
+                questionDiv.addEventListener('click', () => {
+                    document.querySelectorAll('.display-question').forEach(q => {
+                        q.classList.remove('selected');
+                    });
+                    
+                    questionDiv.classList.add('selected');
+                    selectedQuestionId = question._id;
+                    
+                    // Update admin panel
+                    updateAdminPanel(question);
+                });
+                
+                displayQuestions.appendChild(questionDiv);
+            });
+            
+            // Auto-select first question if none selected
+            if (!selectedQuestionId && questions.length > 0) {
+                const firstQuestion = document.querySelector('.display-question');
+                if (firstQuestion) {
+                    firstQuestion.click();
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching questions:', err);
+            displayQuestions.innerHTML = `
+                <div class="display-question error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>حدث خطأ أثناء جلب الأسئلة</h3>
+                    <p>${err.message}</p>
+                </div>
+            `;
+        }
+    }
+    
+    // Update admin panel with selected question
+    function updateAdminPanel(question) {
+        const answerInput = document.getElementById('answerInput');
+        const markAnsweredBtn = document.getElementById('markAnswered');
+        const featureBtn = document.getElementById('featureQuestion');
+        const unfeatureBtn = document.getElementById('unfeatureQuestion');
+        const deleteBtn = document.getElementById('deleteQuestion');
+        
+        answerInput.value = '';
+        
+        if (question.answered) {
+            markAnsweredBtn.disabled = true;
+            markAnsweredBtn.textContent = 'تم الإجابة';
+            answerInput.placeholder = 'يمكنك تعديل الإجابة الحالية';
+            if (question.answer) {
+                answerInput.value = question.answer;
+            }
+        } else {
+            markAnsweredBtn.disabled = false;
+            markAnsweredBtn.textContent = 'تعيين كمجاب عليه';
+            answerInput.placeholder = 'اكتب الإجابة هنا...';
+        }
+        
+        if (question.featured) {
+            featureBtn.style.display = 'none';
+            unfeatureBtn.style.display = 'block';
+        } else {
+            featureBtn.style.display = 'block';
+            unfeatureBtn.style.display = 'none';
+        }
+    }
+    
+    // Mark question as answered
+    document.getElementById('markAnswered').addEventListener('click', async () => {
+        if (!selectedQuestionId) {
+            alert('الرجاء اختيار سؤال أولاً');
+            return;
+        }
+        
+        const answerText = document.getElementById('answerInput').value.trim();
+        if (!answerText) {
+            alert('الرجاء إدخال إجابة');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/questions/${selectedQuestionId}/answer`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ answer: answerText }),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to mark as answered');
+            }
+            
+            const updatedQuestion = await response.json();
+            fetchAndDisplayQuestions();
+            showSuccessMessage('تم حفظ الإجابة بنجاح');
+        } catch (err) {
+            console.error('Error marking question as answered:', err);
+            showErrorMessage(`حدث خطأ أثناء تعيين السؤال كمجاب عليه: ${err.message}`);
+        }
+    });
+    
+    // Feature question
+    document.getElementById('featureQuestion').addEventListener('click', async () => {
+        if (!selectedQuestionId) {
+            alert('الرجاء اختيار سؤال أولاً');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/questions/${selectedQuestionId}/feature`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to feature question');
+            }
+            
+            const updatedQuestion = await response.json();
+            fetchAndDisplayQuestions();
+            showSuccessMessage('تم تمييز السؤال بنجاح');
+        } catch (err) {
+            console.error('Error featuring question:', err);
+            showErrorMessage(`حدث خطأ أثناء تمييز السؤال: ${err.message}`);
+        }
+    });
+    
+    // Unfeature question
+    document.getElementById('unfeatureQuestion').addEventListener('click', async () => {
+        if (!selectedQuestionId) {
+            alert('الرجاء اختيار سؤال أولاً');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/questions/${selectedQuestionId}/unfeature`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to unfeature question');
+            }
+            
+            const updatedQuestion = await response.json();
+            fetchAndDisplayQuestions();
+            showSuccessMessage('تم إلغاء تمييز السؤال بنجاح');
+        } catch (err) {
+            console.error('Error unfeaturing question:', err);
+            showErrorMessage(`حدث خطأ أثناء إلغاء تمييز السؤال: ${err.message}`);
+        }
+    });
+    
+    // Delete question
+    document.getElementById('deleteQuestion').addEventListener('click', async () => {
+        if (!selectedQuestionId) {
+            alert('الرجاء اختيار سؤال أولاً');
+            return;
+        }
+        
+        if (!confirm('هل أنت متأكد من حذف هذا السؤال؟')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/questions/${selectedQuestionId}`, {
+                method: 'DELETE',
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to delete question');
+            }
+            
+            selectedQuestionId = null;
+            fetchAndDisplayQuestions();
+            showSuccessMessage('تم حذف السؤال بنجاح');
+        } catch (err) {
+            console.error('Error deleting question:', err);
+            showErrorMessage(`حدث خطأ أثناء حذف السؤال: ${err.message}`);
+        }
+    });
+    
+    // Show success message
+    function showSuccessMessage(message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'notification success';
+        messageDiv.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(messageDiv);
+        
+        setTimeout(() => {
+            messageDiv.remove();
+        }, 3000);
+    }
+    
+    // Show error message
+    function showErrorMessage(message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'notification error';
+        messageDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(messageDiv);
+        
+        setTimeout(() => {
+            messageDiv.remove();
+        }, 5000);
+    }
+    
+    // Initial load
+    fetchAndDisplayQuestions();
+    setInterval(fetchAndDisplayQuestions, 10000); // Refresh every 10 seconds
+});    </script>
+</body>
+</html>

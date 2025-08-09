@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الأسئلة والأجوبة - نوكسوس</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #1a252f;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --info: #2980b9;
+            --admin-bg: #f8f9fa;
+            --tv-bezel: #1a1a1a;
+            --neon: #0ff0fc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f5f5f5;
+            color: var(--dark);
+        }
+
+        /* Main Container */
+        .container {
+            display: none;
+            padding: 1rem;
+        }
+
+        .container.active {
+            display: block;
+        }
+
+        /* Header Styles */
+        .header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo {
+            height: 80px;
+            margin: 0 15px;
+        }
+
+        .header h1 {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            background-color: var(--secondary);
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .nav-tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            color: white;
+            border-radius: 4px;
+            margin: 0 0.2rem;
+            transition: all 0.3s;
+        }
+
+        .nav-tab:hover, .nav-tab.active {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        /* Student Question Form */
+        .form-container {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        /* Admin Dashboard */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            border-top: 4px solid var(--secondary);
+        }
+
+        .card.new-questions {
+            border-top-color: var(--warning);
+        }
+
+        .card.answered {
+            border-top-color: var(--success);
+        }
+
+        .card.featured {
+            border-top-color: var(--accent);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Questions Table */
+        .questions-table {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 120px;
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 120px;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .table-row:hover {
+            background-color: #f5f5f5;
+        }
+
+        .question-text {
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-answered {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-featured {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* TV Display Mode */
+        .tv-display {
+            background: linear-gradient(135deg, #000428, #004e92);
+            color: white;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .tv-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 15px solid var(--tv-bezel);
+            border-radius: 20px;
+            box-shadow: 
+                0 0 30px rgba(0, 0, 0, 0.8),
+                inset 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .tv-screen {
+            position: relative;
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            box-shadow: 
+                0 0 50px rgba(106, 17, 203, 0.5),
+                inset 0 0 30px rgba(37, 117, 252, 0.3);
+            border: 2px solid var(--neon);
+            overflow: hidden;
+        }
+
+        .display-question {
+            background-color: #f9f9f9;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            border-left: 6px solid var(--secondary);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .display-question.featured {
+            border-left: 6px solid var(--accent);
+            box-shadow: 0 0 20px rgba(251, 176, 64, 0.3);
+        }
+
+        .display-question.answered {
+            border-left: 6px solid var(--success);
+        }
+
+        .display-question h3 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .display-question .answer {
+            background-color: #e8f4fc;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            border-left: 3px solid var(--success);
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification i {
+            margin-left: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .notification.success {
+            background-color: var(--success);
+        }
+
+        .notification.error {
+            background-color: var(--accent);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .table-header, .table-row {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .table-header {
+                display: none;
+            }
+
+            .table-row {
+                position: relative;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border: 1px solid #eee;
+                border-radius: 8px;
+            }
+
+            .question-text {
+                grid-column: 1;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+
+            .status-badge {
+                position: absolute;
+                top: 1rem;
+                left: 1rem;
+            }
+
+            .action-buttons {
+                grid-column: 1;
+                justify-content: flex-end;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <div class="nav-tab" onclick="showTab('student-view')">طرح سؤال</div>
+        <div class="nav-tab" onclick="showTab('admin-view')">لوحة التحكم</div>
+        <div class="nav-tab" onclick="showTab('display-view')">عرض الأسئلة</div>
+    </div>
+
+    <!-- Student Question Form -->
+    <div id="student-view" class="container active">
+        <div class="form-container">
+            <h2 style="text-align: center; margin-bottom: 1.5rem;">طرح سؤال جديد</h2>
+            <div class="form-group">
+                <label for="questionText">السؤال:</label>
+                <textarea id="questionText" class="form-control" placeholder="اكتب سؤالك هنا..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="featureQuestion"> تعيين كسؤال مهم
+                </label>
+            </div>
+            <button class="btn btn-primary" onclick="submitQuestion()">إرسال السؤال</button>
+            <div id="questionMessage" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-view" class="container">
+        <h2 style="text-align: center; margin-bottom: 1.5rem;">لوحة تحكم الأسئلة والأجوبة</h2>
+        
+        <div class="dashboard-cards">
+            <div class="card new-questions">
+                <p class="card-title">أسئلة جديدة</p>
+                <p class="card-value" id="newQuestionsCount">0</p>
+            </div>
+            <div class="card answered">
+                <p class="card-title">تمت الإجابة</p>
+                <p class="card-value" id="answeredQuestionsCount">0</p>
+            </div>
+            <div class="card featured">
+                <p class="card-title">أسئلة مميزة</p>
+                <p class="card-value" id="featuredQuestionsCount">0</p>
+            </div>
+            <div class="card">
+                <p class="card-title">إجمالي الأسئلة</p>
+                <p class="card-value" id="totalQuestionsCount">0</p>
+            </div>
+        </div>
+        
+        <div class="questions-table">
+            <div class="table-header">
+                <div>السؤال</div>
+                <div>الحالة</div>
+                <div>التاريخ</div>
+                <div>النوع</div>
+                <div>الإجراءات</div>
+            </div>
+            <div id="questionsTableBody">
+                <!-- Questions will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TV Display Mode -->
+    <div id="display-view" class="container tv-display">
+        <div class="tv-frame"></div>
+        <div class="tv-screen">
+            <div class="header">
+                <div class="logo-container">
+                    <img src="https://via.placeholder.com/80x80/6a11cb/ffffff?text=NEXUS" alt="Nexus Club Logo" class="logo">
+                    <img src="https://via.placeholder.com/80x80/2575fc/ffffff?text=REDOX" alt="Redox Logo" class="logo">
+                </div>
+                <h1>أسئلة وأجوبة تظاهرة الحياة الجامعية</h1>
+            </div>
+            
+            <div id="displayQuestions">
+                <!-- Questions will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Answer Modal -->
+    <div class="modal" id="answerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background-color: white; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="padding: 1rem 1.5rem; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; color: var(--primary);">إجابة على السؤال</h3>
+                <button class="close-btn" onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6c757d;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <div class="form-group">
+                    <label for="modalQuestionText">السؤال:</label>
+                    <input type="text" id="modalQuestionText" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="modalAnswerText">الإجابة:</label>
+                    <textarea id="modalAnswerText" class="form-control" placeholder="اكتب الإجابة هنا..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="modalFeatureQuestion"> تعيين كسؤال مميز
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 1rem 1.5rem; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 0.8rem;">
+                <button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+                <button class="btn btn-primary" onclick="saveAnswer()">حفظ الإجابة</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentSelectedQuestion = null;
+        const apiBaseUrl = '/api/questions';
+
+        // Show tab function
+        function showTab(tabId) {
+            document.querySelectorAll('.container').forEach(container => {
+                container.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            // Refresh data when switching tabs
+            if (tabId === 'admin-view') {
+                loadAdminDashboard();
+            } else if (tabId === 'display-view') {
+                loadDisplayQuestions();
+            }
+        }
+
+        // Submit new question
+        async function submitQuestion() {
+            const questionText = document.getElementById('questionText').value.trim();
+            const isFeatured = document.getElementById('featureQuestion').checked;
+            
+            if (!questionText) {
+                showMessage('questionMessage', 'الرجاء إدخال سؤال', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(apiBaseUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        text: questionText,
+                        featured: isFeatured 
+                    }),
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to submit question');
+                }
+                
+                document.getElementById('questionText').value = '';
+                document.getElementById('featureQuestion').checked = false;
+                showMessage('questionMessage', 'تم إرسال سؤالك بنجاح!', 'success');
+                
+                // Refresh admin dashboard if active
+                if (document.getElementById('admin-view').classList.contains('active')) {
+                    loadAdminDashboard();
+                }
+            } catch (err) {
+                console.error('Error submitting question:', err);
+                showMessage('questionMessage', `حدث خطأ أثناء إرسال السؤال: ${err.message}`, 'error');
+            }
+        }
+
+        // Load admin dashboard
+        async function loadAdminDashboard() {
+            try {
+                const response = await fetch(apiBaseUrl);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const questions = await response.json();
+                
+                // Update counts
+                document.getElementById('totalQuestionsCount').textContent = questions.length;
+                document.getElementById('answeredQuestionsCount').textContent = questions.filter(q => q.answered).length;
+                document.getElementById('newQuestionsCount').textContent = questions.filter(q => !q.answered).length;
+                document.getElementById('featuredQuestionsCount').textContent = questions.filter(q => q.featured).length;
+                
+                // Update questions table
+                const tableBody = document.getElementById('questionsTableBody');
+                tableBody.innerHTML = '';
+                
+                if (questions.length === 0) {
+                    tableBody.innerHTML = `
+                        <div class="table-row" style="grid-column: 1 / -1; text-align: center;">
+                            <div>لا توجد أسئلة بعد</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                questions.forEach(question => {
+                    const row = document.createElement('div');
+                    row.className = 'table-row';
+                    row.dataset.id = question._id;
+                    
+                    let statusClass = 'status-pending';
+                    let statusText = 'قيد الانتظار';
+                    
+                    if (question.answered) {
+                        statusClass = 'status-answered';
+                        statusText = 'تمت الإجابة';
+                    } else if (question.featured) {
+                        statusClass = 'status-featured';
+                        statusText = 'مميز';
+                    }
+                    
+                    row.innerHTML = `
+                        <div class="question-text">${question.text}</div>
+                        <div><span class="status-badge ${statusClass}">${statusText}</span></div>
+                        <div>${new Date(question.createdAt).toLocaleString('ar-EG')}</div>
+                        <div>عام</div>
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-sm" onclick="openAnswerModal('${question._id}')">
+                                <i class="fas fa-reply"></i> ${question.answered ? 'تعديل' : 'إجابة'}
+                            </button>
+                            ${question.featured ? 
+                                `<button class="btn btn-secondary btn-sm" onclick="toggleFeatureQuestion('${question._id}', false)">
+                                    <i class="fas fa-star"></i> إلغاء
+                                </button>` : 
+                                `<button class="btn btn-danger btn-sm" onclick="toggleFeatureQuestion('${question._id}', true)">
+                                    <i class="fas fa-star"></i> تمييز
+                                </button>`
+                            }
+                            <button class="btn btn-secondary btn-sm" onclick="deleteQuestion('${question._id}')">
+                                <i class="fas fa-trash"></i> حذف
+                            </button>
+                        </div>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            } catch (err) {
+                console.error('Error loading admin dashboard:', err);
+                document.getElementById('questionsTableBody').innerHTML = `
+                    <div class="table-row" style="grid-column: 1 / -1; text-align: center;">
+                        <div>حدث خطأ أثناء جلب الأسئلة</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Load display questions
+        async function loadDisplayQuestions() {
+            try {
+                const response = await fetch(apiBaseUrl);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const questions = await response.json();
+                
+                const displayContainer = document.getElementById('displayQuestions');
+                displayContainer.innerHTML = '';
+                
+                if (questions.length === 0) {
+                    displayContainer.innerHTML = `
+                        <div class="display-question empty-state" style="text-align: center;">
+                            <i class="fas fa-question-circle" style="font-size: 3rem; color: #7f8c8d; margin-bottom: 1rem;"></i>
+                            <h3>لا توجد أسئلة بعد</h3>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Sort questions: featured first, then unanswered, then answered
+                const sortedQuestions = [...questions].sort((a, b) => {
+                    if (a.featured && !b.featured) return -1;
+                    if (!a.featured && b.featured) return 1;
+                    if (!a.answered && b.answered) return -1;
+                    if (a.answered && !b.answered) return 1;
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                });
+                
+                sortedQuestions.forEach(question => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = `display-question ${question.featured ? 'featured' : ''} ${question.answered ? 'answered' : ''}`;
+                    
+                    const questionTitle = document.createElement('h3');
+                    questionTitle.textContent = question.text;
+                    
+                    questionDiv.appendChild(questionTitle);
+                    
+                    if (question.answered && question.answer) {
+                        const answerDiv = document.createElement('div');
+                        answerDiv.className = 'answer';
+                        
+                        const answerTitle = document.createElement('h4');
+                        answerTitle.textContent = 'الجواب:';
+                        
+                        const answerText = document.createElement('p');
+                        answerText.textContent = question.answer;
+                        
+                        answerDiv.appendChild(answerTitle);
+                        answerDiv.appendChild(answerText);
+                        questionDiv.appendChild(answerDiv);
+                    } else {
+                        const pendingText = document.createElement('p');
+                        pendingText.textContent = 'جاري البحث عن إجابة...';
+                        pendingText.style.color = 'var(--warning)';
+                        questionDiv.appendChild(pendingText);
+                    }
+                    
+                    const questionMeta = document.createElement('div');
+                    questionMeta.style.marginTop = '1rem';
+                    questionMeta.style.color = '#7f8c8d';
+                    questionMeta.style.fontSize = '0.9rem';
+                    questionMeta.textContent = new Date(question.createdAt).toLocaleString('ar-EG');
+                    
+                    questionDiv.appendChild(questionMeta);
+                    displayContainer.appendChild(questionDiv);
+                });
+            } catch (err) {
+                console.error('Error loading display questions:', err);
+                document.getElementById('displayQuestions').innerHTML = `
+                    <div class="display-question error-state" style="text-align: center;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+                        <h3>حدث خطأ أثناء جلب الأسئلة</h3>
+                    </div>
+                `;
+            }
+        }
+
+        // Open answer modal
+        async function openAnswerModal(questionId) {
+            try {
+                const response = await fetch(`${apiBaseUrl}/${questionId}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const question = await response.json();
+                
+                currentSelectedQuestion = questionId;
+                document.getElementById('modalQuestionText').value = question.text;
+                document.getElementById('modalAnswerText').value = question.answer || '';
+                document.getElementById('modalFeatureQuestion').checked = question.featured;
+                
+                document.getElementById('answerModal').style.display = 'flex';
+            } catch (err) {
+                console.error('Error opening answer modal:', err);
+                showNotification(`حدث خطأ أثناء فتح السؤال: ${err.message}`, 'error');
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('answerModal').style.display = 'none';
+            currentSelectedQuestion = null;
+        }
+
+        // Save answer
+        async function saveAnswer() {
+            const answerText = document.getElementById('modalAnswerText').value.trim();
+            const isFeatured = document.getElementById('modalFeatureQuestion').checked;
+            
+            if (!answerText) {
+                showNotification('الرجاء إدخال إجابة', 'error');
+                return;
+            }
+            
+            try {
+                // First update the answer
+                const answerResponse = await fetch(`${apiBaseUrl}/${currentSelectedQuestion}/answer`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ answer: answerText }),
+                });
+                
+                if (!answerResponse.ok) {
+                    const errorData = await answerResponse.json();
+                    throw new Error(errorData.error || 'Failed to save answer');
+                }
+                
+                // Then update the featured status if changed
+                const featuredResponse = await fetch(`${apiBaseUrl}/${currentSelectedQuestion}/${isFeatured ? 'feature' : 'unfeature'}`, {
+                    method: 'PUT',
+                });
+                
+                if (!featuredResponse.ok) {
+                    const errorData = await featuredResponse.json();
+                    throw new Error(errorData.error || 'Failed to update featured status');
+                }
+                
+                closeModal();
+                loadAdminDashboard();
+                showNotification('تم حفظ الإجابة بنجاح', 'success');
+            } catch (err) {
+                console.error('Error saving answer:', err);
+                showNotification(`حدث خطأ أثناء حفظ الإجابة: ${err.message}`, 'error');
+            }
+        }
+
+        // Toggle feature question
+        async function toggleFeatureQuestion(questionId, feature) {
+            try {
+                const response = await fetch(`${apiBaseUrl}/${questionId}/${feature ? 'feature' : 'unfeature'}`, {
+                    method: 'PUT',
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to toggle feature');
+                }
+                
+                loadAdminDashboard();
+                showNotification(`تم ${feature ? 'تمييز' : 'إلغاء تمييز'} السؤال بنجاح`, 'success');
+            } catch (err) {
+                console.error('Error toggling feature:', err);
+                showNotification(`حدث خطأ أثناء ${feature ? 'تمييز' : 'إلغاء تمييز'} السؤال: ${err.message}`, 'error');
+            }
+        }
+
+        // Delete question
+        async function deleteQuestion(questionId) {
+            if (!confirm('هل أنت متأكد من حذف هذا السؤال؟')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${apiBaseUrl}/${questionId}`, {
+                    method: 'DELETE',
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to delete question');
+                }
+                
+                loadAdminDashboard();
+                showNotification('تم حذف السؤال بنجاح', 'success');
+            } catch (err) {
+                console.error('Error deleting question:', err);
+                showNotification(`حدث خطأ أثناء حذف السؤال: ${err.message}`, 'error');
+            }
+        }
+
+        // Show message
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.color = type === 'error' ? 'var(--accent)' : 'var(--success)';
+            element.style.fontWeight = '600';
+            
+            setTimeout(() => {
+                element.textContent = '';
+            }, 5000);
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set the default active tab
+            showTab('student-view');
+            
+            // Set up auto-refresh for display view
+            setInterval(() => {
+                if (document.getElementById('display-view').classList.contains('active')) {
+                    loadDisplayQuestions();
+                }
+            }, 10000);
+        });
+    </script>
+</body>
+</html>

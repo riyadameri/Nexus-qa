@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طرح سؤال جديد - نوكسوس</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="tv-frame"></div>
+    <div class="tv-screen">
+        <div class="scanlines"></div>
+        
+        <div class="header">
+            <div class="header-content">
+                <div class="logo-container">
+                    <img src="nexus.png" alt="Nexus Club Logo" class="logo">
+                    <img src="redox.png" alt="Redox Logo" class="logo">
+                </div>
+                <h1 class="club-name">طرح سؤال جديد</h1>
+                <p class="event-title digital-text">تظاهرة الحياة الجامعية 2025-2026</p>
+            </div>
+        </div>
+        
+        <div class="main-container">
+            <div class="form-container">
+                <div class="form-group">
+                    <label for="questionInput" class="form-label">سؤالك:</label>
+                    <textarea id="questionInput" placeholder="اكتب سؤالك هنا..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="featuredCheckbox">
+                        <span class="checkmark"></span>
+                        تعيين كسؤال مميز
+                    </label>
+                </div>
+                
+                <button id="submitQuestion" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> إرسال السؤال
+                </button>
+                
+                <p id="message"></p>
+            </div>
+            
+            <div class="recent-questions">
+                <h2><i class="fas fa-history"></i> آخر الأسئلة المطروحة</h2>
+                <div id="questionsList" class="questions-list"></div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-content">
+                <p class="copyright digital-text">© 2025 نادي نوكسوس - برعاية ريدوكس</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="ask.js"></script>
+</body>
+</html>
